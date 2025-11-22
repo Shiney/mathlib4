@@ -926,8 +926,23 @@ variable {u : V}{v : V}{w : V}
 @[simp] lemma isEdgeReachable_one : G.IsEdgeReachable 1 u v ↔ G.Reachable u v := by
   constructor
   · intro h
-    sorry
-  · sorry
+    have h2 : (G.deleteEdges ∅ ).Reachable u v :=by
+      apply h
+      simp
+    unfold deleteEdges at h2
+    simp at h2
+    assumption
+
+  · intro h s sl
+    have hcard: s.encard = ↑0 := by
+      exact ENat.lt_one_iff_eq_zero.mp sl
+    have he : s = ∅ := by
+       exact Set.encard_eq_zero.mp hcard
+    unfold deleteEdges
+    rw[he]
+    simp
+    assumption
+
 
 lemma isEdgeReachable_succ :
     G.IsEdgeReachable (k + 1) u v ↔ ∀ e, (G.deleteEdges {e}).IsEdgeReachable k u v := sorry
