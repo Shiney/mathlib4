@@ -948,7 +948,21 @@ lemma isEdgeReachable_succ :
     G.IsEdgeReachable (k + 1) u v ↔ ∀ e, (G.deleteEdges {e}).IsEdgeReachable k u v := sorry
 
 lemma isEdgeConnected_succ :
-    G.IsEdgeConnected (k + 1) ↔ ∀ e, (G.deleteEdges {e}).IsEdgeConnected k := sorry
+    G.IsEdgeConnected (k + 1) ↔ ∀ e, (G.deleteEdges {e}).IsEdgeConnected k := by
+    constructor
+    · unfold IsEdgeConnected
+      intro h
+      intro e
+      intro u v
+      have h2 : G.IsEdgeReachable (k + 1) u v := by
+        apply h u v
+      rw[isEdgeReachable_succ] at h2
+      apply h2
 
+    · unfold IsEdgeConnected
+      intro h u v
+      rw[isEdgeReachable_succ]
+      intro e
+      apply h
 
 end SimpleGraph
