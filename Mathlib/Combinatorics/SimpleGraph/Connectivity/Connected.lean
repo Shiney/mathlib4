@@ -7,7 +7,7 @@ module
 
 public import Mathlib.Combinatorics.SimpleGraph.Paths
 public import Mathlib.Combinatorics.SimpleGraph.Subgraph
-
+public import Mathlib.Data.Set.Card
 /-!
 ## Main definitions
 
@@ -875,5 +875,65 @@ lemma Preconnected.induce_of_degree_eq_one (hG : G.Preconnected) {s : Set V}
   rintro w hwp
   by_contra hws
   exact hp.not_mem_support_of_subsingleton_neighborSet (by grind) (by grind) (hs _ hws) hwp
+
+
+
+def IsEdgeReachable (k : ℕ) (u v : V) : Prop :=
+  ∀ ⦃s : Set (Sym2 V)⦄, s.encard < k → (G.deleteEdges s).Reachable u v
+
+def IsEdgeConnected (k : ℕ) : Prop := ∀ u v, G.IsEdgeReachable k u v
+
+variable {k : ℕ} {l : ℕ}
+variable {u : V}{v : V}{w : V}
+
+@[simp] lemma IsEdgeReachable.rfl : G.IsEdgeReachable k u u :=
+  by
+    intro s h
+    simp
+
+@[simp] lemma IsEdgeReachable.trans
+  (huv : G.IsEdgeReachable k u v)
+  (hvw : G.IsEdgeReachable k v w) :
+      G.IsEdgeReachable k u w := by
+        intro s h
+        have h1 : (G.deleteEdges s).Reachable u v :=
+          by
+            apply huv
+            assumption
+        have h2 : (G.deleteEdges s).Reachable v w :=
+          by
+            apply hvw
+            assumption
+        exact Reachable.trans (huv h) (hvw h)
+
+
+@[simp] lemma IsEdgeReachable.mono (hkl : k ≤ l) :
+    G.IsEdgeReachable l u v → G.IsEdgeReachable k u v :=
+      by
+        intro hl s h
+        have h2 : s.encard < l :=
+          by calc s.encard < k := by assumption
+          _ ≤ l := by exact ENat.coe_le_coe.mpr hkl
+        apply hl h2
+
+
+@[simp] lemma IsEdgeReachable.zero : G.IsEdgeReachable 0 u v := by
+    intro s h
+    contrapose h
+    simp
+
+
+@[simp] lemma isEdgeReachable_one : G.IsEdgeReachable 1 u v ↔ G.Reachable u v := by
+  constructor
+  · intro h
+    sorry
+  · sorry
+
+lemma isEdgeReachable_succ :
+    G.IsEdgeReachable (k + 1) u v ↔ ∀ e, (G.deleteEdges {e}).IsEdgeReachable k u v := sorry
+
+lemma isEdgeConnected_succ :
+    G.IsEdgeConnected (k + 1) ↔ ∀ e, (G.deleteEdges {e}).IsEdgeConnected k := sorry
+
 
 end SimpleGraph
