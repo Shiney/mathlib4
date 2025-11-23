@@ -960,7 +960,24 @@ lemma isEdgeReachable_succ :
         apply h hs1
       · intro h
         intro s hs
-        sorry
+        by_cases hemp: s = ∅
+        · sorry
+        · have hnonEmp : s.Nonempty := by
+            apply Set.nonempty_iff_empty_ne.mpr
+            symm
+            apply hemp
+          obtain ⟨ e, he⟩ := hnonEmp
+          let s2 : Set (Sym2 V) := s \ {e}
+          have hs2: s = {e} ∪ s2 := by
+            refine Eq.symm (Set.union_diff_cancel ?_)
+            simp
+            assumption
+          rw[hs2, ← deleteEdges_deleteEdges]
+          apply h
+          · calc s2.encard = s.encard -1 := by exact Set.encard_diff_singleton_of_mem he
+            _ < k  +1 -1 := by sorry
+            _ = k := by
+              exact rfl
 
 lemma isEdgeConnected_succ :
     G.IsEdgeConnected (k + 1) ↔ ∀ e, (G.deleteEdges {e}).IsEdgeConnected k := by
