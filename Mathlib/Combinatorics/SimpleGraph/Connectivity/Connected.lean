@@ -945,7 +945,22 @@ variable {u : V}{v : V}{w : V}
 
 
 lemma isEdgeReachable_succ :
-    G.IsEdgeReachable (k + 1) u v ↔ ∀ e, (G.deleteEdges {e}).IsEdgeReachable k u v := sorry
+    G.IsEdgeReachable (k + 1) u v ↔ ∀ e, (G.deleteEdges {e}).IsEdgeReachable k u v :=by
+      constructor
+      · intro h e s hs
+        let s1: Set (Sym2 V) := {e} ∪ s
+        rw[deleteEdges_deleteEdges]
+        have hs1 : s1.encard < k+1 := by
+          calc s1.encard ≤ ({e} : Set (Sym2 V)).encard + s.encard := by apply
+            Set.encard_union_le
+          _ <  k + 1 := by
+            rw[add_comm]
+            simp
+            exact lt_tsub_iff_right.mp hs
+        apply h hs1
+      · intro h
+        intro s hs
+        sorry
 
 lemma isEdgeConnected_succ :
     G.IsEdgeConnected (k + 1) ↔ ∀ e, (G.deleteEdges {e}).IsEdgeConnected k := by
