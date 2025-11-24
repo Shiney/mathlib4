@@ -1012,4 +1012,3 @@ lemma isEdgeConnected_succ :
       apply h
 
 end SimpleGraph
-()
