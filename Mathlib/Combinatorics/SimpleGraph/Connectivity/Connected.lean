@@ -974,10 +974,11 @@ lemma isEdgeReachable_succ :
             assumption
           rw[hs2, ← deleteEdges_deleteEdges]
           apply h
-          · calc s2.encard = s.encard -1 := by exact Set.encard_diff_singleton_of_mem he
-            _ < k  +1 -1 := by sorry
-            _ = k := by
-              exact rfl
+          · have h3: s.encard = s2.encard  + 1
+              := by exact Eq.symm (Set.encard_diff_singleton_add_one he)
+            rw[h3] at hs
+            exact lt_of_add_lt_add_right hs
+
 
 lemma isEdgeConnected_succ :
     G.IsEdgeConnected (k + 1) ↔ ∀ e, (G.deleteEdges {e}).IsEdgeConnected k := by
