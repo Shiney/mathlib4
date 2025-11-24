@@ -997,9 +997,7 @@ lemma isEdgeConnected_succ :
     G.IsEdgeConnected (k + 1) ↔ ∀ e, (G.deleteEdges {e}).IsEdgeConnected k := by
     constructor
     · unfold IsEdgeConnected
-      intro h
-      intro e
-      intro u v
+      intro h e u v
       have h2 : G.IsEdgeReachable (k + 1) u v := by
         apply h u v
       rw[isEdgeReachable_succ] at h2
