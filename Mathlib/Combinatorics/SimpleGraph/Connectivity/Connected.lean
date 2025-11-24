@@ -961,7 +961,20 @@ lemma isEdgeReachable_succ :
       · intro h
         intro s hs
         by_cases hemp: s = ∅
-        · sorry
+        · have kpos:k >0:= by sorry -- not true but make some progress anyway
+          specialize h s(u,v)
+          have hsltk: s.encard < k := by
+            rw[hemp]
+            rw[Set.encard_empty]
+            exact Nat.cast_pos'.mpr kpos
+          specialize h hsltk
+          rw[hemp, deleteEdges_empty]
+          rw[hemp, deleteEdges_empty] at h
+          have hlt: (G.deleteEdges {s(u, v)}) ≤ G := by
+            apply deleteEdges_le
+          apply Reachable.mono hlt
+          apply h
+
         · have hnonEmp : s.Nonempty := by
             apply Set.nonempty_iff_empty_ne.mpr
             symm
@@ -999,3 +1012,4 @@ lemma isEdgeConnected_succ :
       apply h
 
 end SimpleGraph
+()
