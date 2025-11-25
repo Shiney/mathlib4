@@ -944,7 +944,7 @@ variable {u : V}{v : V}{w : V}
     assumption
 
 
-lemma isEdgeReachable_succ :
+lemma isEdgeReachable_succ (hkpos : k > 0) :
     G.IsEdgeReachable (k + 1) u v ↔ ∀ e, (G.deleteEdges {e}).IsEdgeReachable k u v :=by
       constructor
       · intro h e s hs
@@ -958,15 +958,13 @@ lemma isEdgeReachable_succ :
             simp
             exact lt_tsub_iff_right.mp hs
         apply h hs1
-      · intro h
-        intro s hs
+      · intro h s hs
         by_cases hemp: s = ∅
-        · have kpos:k >0:= by sorry -- not true but make some progress anyway
-          specialize h s(u,v)
+        · specialize h s(u,v)
           have hsltk: s.encard < k := by
             rw[hemp]
             rw[Set.encard_empty]
-            exact Nat.cast_pos'.mpr kpos
+            exact Nat.cast_pos'.mpr hkpos
           specialize h hsltk
           rw[hemp, deleteEdges_empty]
           rw[hemp, deleteEdges_empty] at h
@@ -993,19 +991,19 @@ lemma isEdgeReachable_succ :
             exact lt_of_add_lt_add_right hs
 
 
-lemma isEdgeConnected_succ :
+lemma isEdgeConnected_succ (hkpos : k > 0) :
     G.IsEdgeConnected (k + 1) ↔ ∀ e, (G.deleteEdges {e}).IsEdgeConnected k := by
     constructor
     · unfold IsEdgeConnected
       intro h e u v
       have h2 : G.IsEdgeReachable (k + 1) u v := by
         apply h u v
-      rw[isEdgeReachable_succ] at h2
+      rw[isEdgeReachable_succ hkpos] at h2
       apply h2
 
     · unfold IsEdgeConnected
       intro h u v
-      rw[isEdgeReachable_succ]
+      rw[isEdgeReachable_succ hkpos]
       intro e
       apply h
 
