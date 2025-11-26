@@ -189,14 +189,28 @@ theorem IsAcyclic.not_twoConnected (h : G.IsAcyclic) (u : V) (v : V) (hunev : u 
       specialize hconn hsletwo
       obtain ⟨ p2: (G.deleteEdges s1).Walk u v, hp2⟩  := (Reachable.exists_isPath hconn)
       -- show paths are not equal then use isAcyclic_iff_path_unique
-      match p2 with
+      match hp2eq : p2 with
       | nil => contradiction
-      | cons' _ w' _ huw' p =>
+      | cons' _ w' vv huw' prst =>
         have wne : w' ≠ w:= by
           by_contra hweq
           rw[← hweq] at hdeladj
           contradiction
         let p3 := p2.mapLe (deleteEdges_le s1)
+        have hv : v = vv:= by assumption
+        subst hv
+        have h:  p2 = cons huw' prst := by
+          cases hp2eq
+          simp
+        have hp3 : p3.IsPath := by
+          refine (mapLe_isPath (deleteEdges_le s1)).mpr ?_
+          unfold cons' at hp2
+          rw[h]
+          assumption
+
+
+
+
 
 
         sorry
