@@ -165,6 +165,55 @@ theorem isAcyclic_of_path_unique (h : ∀ (v w : V) (p q : G.Path v w), p = q) :
 theorem isAcyclic_iff_path_unique : G.IsAcyclic ↔ ∀ ⦃v w : V⦄ (p q : G.Path v w), p = q :=
   ⟨IsAcyclic.path_unique, isAcyclic_of_path_unique⟩
 
+theorem IsAcyclic.not_twoConnected (h : G.IsAcyclic) (u : V) (v : V) (hunev : u ≠ v)
+    : ¬ G.IsEdgeConnected 2 := by
+  by_contra hconn
+  specialize hconn u v
+  by_cases h2 : G.Reachable u v
+  · obtain ⟨ p1: G.Walk u v, hp1⟩  := (Reachable.exists_isPath h2)
+    match p1 with
+    | nil => contradiction
+    | cons' u w v _ p =>
+      let s1 := ({s(u,w)} : Set (Sym2 V))
+      have hsletwo : s1.encard < 2 := by
+        unfold s1
+        simp
+      have hdeladj: ¬(G.deleteEdges s1).Adj u w :=by
+            unfold s1
+            unfold deleteEdges
+            unfold Adj
+            simp
+            intro h3 h4
+            rw [h4] at h3
+            apply G.loopless w h3
+      specialize hconn hsletwo
+      obtain ⟨ p2: (G.deleteEdges s1).Walk u v, hp2⟩  := (Reachable.exists_isPath hconn)
+      -- show paths are not equal then use isAcyclic_iff_path_unique
+      match p2 with
+      | nil => contradiction
+      | cons' u w' v huw' p =>
+        have wne : w' ≠ w:= by
+          by_contra hweq
+          rw[← hweq] at hdeladj
+          contradiction
+        sorry
+
+
+
+
+
+
+  · have hempt: (∅ : Set (Sym2 V)).encard < 2 := by
+      simp
+    specialize hconn  hempt
+    rw[deleteEdges_empty] at hconn
+    contradiction
+
+
+
+
+
+
 theorem isTree_iff_existsUnique_path :
     G.IsTree ↔ Nonempty V ∧ ∀ v w : V, ∃! p : G.Walk v w, p.IsPath := by
   classical
