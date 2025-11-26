@@ -198,20 +198,11 @@ theorem IsAcyclic.not_twoConnected (h : G.IsAcyclic) (u : V) (v : V) (hunev : u 
           contradiction
         sorry
 
-
-
-
-
-
   · have hempt: (∅ : Set (Sym2 V)).encard < 2 := by
       simp
     specialize hconn  hempt
     rw[deleteEdges_empty] at hconn
     contradiction
-
-
-
-
 
 
 theorem isTree_iff_existsUnique_path :
