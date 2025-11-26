@@ -173,7 +173,7 @@ theorem IsAcyclic.not_twoConnected (h : G.IsAcyclic) (u : V) (v : V) (hunev : u 
   · obtain ⟨ p1: G.Walk u v, hp1⟩  := (Reachable.exists_isPath h2)
     match p1 with
     | nil => contradiction
-    | cons' u w v _ p =>
+    | cons' _ w _ _ p =>
       let s1 := ({s(u,w)} : Set (Sym2 V))
       have hsletwo : s1.encard < 2 := by
         unfold s1
@@ -191,11 +191,14 @@ theorem IsAcyclic.not_twoConnected (h : G.IsAcyclic) (u : V) (v : V) (hunev : u 
       -- show paths are not equal then use isAcyclic_iff_path_unique
       match p2 with
       | nil => contradiction
-      | cons' u w' v huw' p =>
+      | cons' _ w' _ huw' p =>
         have wne : w' ≠ w:= by
           by_contra hweq
           rw[← hweq] at hdeladj
           contradiction
+        let p3 := p2.mapLe (deleteEdges_le s1)
+
+
         sorry
 
   · have hempt: (∅ : Set (Sym2 V)).encard < 2 := by
