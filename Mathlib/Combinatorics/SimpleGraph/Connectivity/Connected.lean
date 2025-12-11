@@ -804,6 +804,134 @@ theorem IsBridge.anti_of_mem_edgeSet {G' : SimpleGraph V} {e : Sym2 V} (hle : G 
 
 end BridgeEdges
 
+section EdgeConnectivity
+def IsEdgeReachable (k : ℕ) (u v : V) : Prop :=
+  ∀ ⦃s : Set (Sym2 V)⦄, s.encard < k → (G.deleteEdges s).Reachable u v
+
+def IsEdgeConnected (k : ℕ) : Prop := ∀ u v, G.IsEdgeReachable k u v
+
+variable {k : ℕ} {l : ℕ}
+variable {u : V} {v : V} {w : V}
+
+@[simp] lemma IsEdgeReachable.rfl : G.IsEdgeReachable k u u :=
+  by
+    intro s h
+    simp
+
+@[simp] lemma IsEdgeReachable.trans
+  (huv : G.IsEdgeReachable k u v)
+  (hvw : G.IsEdgeReachable k v w) :
+      G.IsEdgeReachable k u w := by
+        intro s h
+        have h1 : (G.deleteEdges s).Reachable u v :=
+          by
+            apply huv
+            assumption
+        have h2 : (G.deleteEdges s).Reachable v w :=
+          by
+            apply hvw
+            assumption
+        exact Reachable.trans (huv h) (hvw h)
+
+@[simp] lemma IsEdgeReachable.mono (hkl : k ≤ l) :
+    G.IsEdgeReachable l u v → G.IsEdgeReachable k u v :=
+      by
+        intro hl s h
+        have h2 : s.encard < l :=
+          by calc s.encard < k := by assumption
+          _ ≤ l := by exact ENat.coe_le_coe.mpr hkl
+        apply hl h2
+
+
+@[simp] lemma IsEdgeReachable.zero : G.IsEdgeReachable 0 u v := by
+    intro s h
+    contrapose h
+    simp
+
+@[simp] lemma isEdgeReachable_one : G.IsEdgeReachable 1 u v ↔ G.Reachable u v := by
+  constructor
+  · intro h
+    have h2 : (G.deleteEdges ∅ ).Reachable u v :=by
+      apply h
+      simp
+    unfold deleteEdges at h2
+    simp at h2
+    assumption
+
+  · intro h s sl
+    have hcard: s.encard = ↑0 := by
+      exact ENat.lt_one_iff_eq_zero.mp sl
+    have he : s = ∅ := by
+       exact Set.encard_eq_zero.mp hcard
+    unfold deleteEdges
+    rw[he]
+    simp
+    assumption
+
+lemma isEdgeReachable_succ (hkpos : k > 0) :
+    G.IsEdgeReachable (k + 1) u v ↔ ∀ e, (G.deleteEdges {e}).IsEdgeReachable k u v :=by
+      constructor
+      · intro h e s hs
+        let s1: Set (Sym2 V) := {e} ∪ s
+        rw[deleteEdges_deleteEdges]
+        have hs1 : s1.encard < k+1 := by
+          calc s1.encard ≤ ({e} : Set (Sym2 V)).encard + s.encard := by apply
+            Set.encard_union_le
+          _ <  k + 1 := by
+            rw[add_comm]
+            simp
+            exact lt_tsub_iff_right.mp hs
+        apply h hs1
+      · intro h s hs
+        by_cases hemp: s = ∅
+        · specialize h s(u,v)
+          have hsltk: s.encard < k := by
+            rw[hemp]
+            rw[Set.encard_empty]
+            exact Nat.cast_pos'.mpr hkpos
+          specialize h hsltk
+          rw[hemp, deleteEdges_empty]
+          rw[hemp, deleteEdges_empty] at h
+          have hlt: (G.deleteEdges {s(u, v)}) ≤ G := by
+            apply deleteEdges_le
+          apply Reachable.mono hlt
+          apply h
+
+        · have hnonEmp : s.Nonempty := by
+            apply Set.nonempty_iff_empty_ne.mpr
+            symm
+            apply hemp
+          obtain ⟨ e, he⟩ := hnonEmp
+          let s2 : Set (Sym2 V) := s \ {e}
+          have hs2: s = {e} ∪ s2 := by
+            refine Eq.symm (Set.union_diff_cancel ?_)
+            simp
+            assumption
+          rw[hs2, ← deleteEdges_deleteEdges]
+          apply h
+          · have h3: s.encard = s2.encard  + 1
+              := by exact Eq.symm (Set.encard_diff_singleton_add_one he)
+            rw[h3] at hs
+            exact lt_of_add_lt_add_right hs
+
+lemma isEdgeConnected_succ (hkpos : k > 0) :
+    G.IsEdgeConnected (k + 1) ↔ ∀ e, (G.deleteEdges {e}).IsEdgeConnected k := by
+    constructor
+    · unfold IsEdgeConnected
+      intro h e u v
+      have h2 : G.IsEdgeReachable (k + 1) u v := by
+        apply h u v
+      rw[isEdgeReachable_succ hkpos] at h2
+      apply h2
+
+    · unfold IsEdgeConnected
+      intro h u v
+      rw[isEdgeReachable_succ hkpos]
+      intro e
+      apply h
+
+end EdgeConnectivity
+
 /-!
 ### 2-reachability
 
@@ -878,133 +1006,5 @@ lemma Preconnected.induce_of_degree_eq_one (hG : G.Preconnected) {s : Set V}
 
 
 
-def IsEdgeReachable (k : ℕ) (u v : V) : Prop :=
-  ∀ ⦃s : Set (Sym2 V)⦄, s.encard < k → (G.deleteEdges s).Reachable u v
-
-def IsEdgeConnected (k : ℕ) : Prop := ∀ u v, G.IsEdgeReachable k u v
-
-variable {k : ℕ} {l : ℕ}
-variable {u : V}{v : V}{w : V}
-
-@[simp] lemma IsEdgeReachable.rfl : G.IsEdgeReachable k u u :=
-  by
-    intro s h
-    simp
-
-@[simp] lemma IsEdgeReachable.trans
-  (huv : G.IsEdgeReachable k u v)
-  (hvw : G.IsEdgeReachable k v w) :
-      G.IsEdgeReachable k u w := by
-        intro s h
-        have h1 : (G.deleteEdges s).Reachable u v :=
-          by
-            apply huv
-            assumption
-        have h2 : (G.deleteEdges s).Reachable v w :=
-          by
-            apply hvw
-            assumption
-        exact Reachable.trans (huv h) (hvw h)
-
-
-@[simp] lemma IsEdgeReachable.mono (hkl : k ≤ l) :
-    G.IsEdgeReachable l u v → G.IsEdgeReachable k u v :=
-      by
-        intro hl s h
-        have h2 : s.encard < l :=
-          by calc s.encard < k := by assumption
-          _ ≤ l := by exact ENat.coe_le_coe.mpr hkl
-        apply hl h2
-
-
-@[simp] lemma IsEdgeReachable.zero : G.IsEdgeReachable 0 u v := by
-    intro s h
-    contrapose h
-    simp
-
-
-@[simp] lemma isEdgeReachable_one : G.IsEdgeReachable 1 u v ↔ G.Reachable u v := by
-  constructor
-  · intro h
-    have h2 : (G.deleteEdges ∅ ).Reachable u v :=by
-      apply h
-      simp
-    unfold deleteEdges at h2
-    simp at h2
-    assumption
-
-  · intro h s sl
-    have hcard: s.encard = ↑0 := by
-      exact ENat.lt_one_iff_eq_zero.mp sl
-    have he : s = ∅ := by
-       exact Set.encard_eq_zero.mp hcard
-    unfold deleteEdges
-    rw[he]
-    simp
-    assumption
-
-
-lemma isEdgeReachable_succ (hkpos : k > 0) :
-    G.IsEdgeReachable (k + 1) u v ↔ ∀ e, (G.deleteEdges {e}).IsEdgeReachable k u v :=by
-      constructor
-      · intro h e s hs
-        let s1: Set (Sym2 V) := {e} ∪ s
-        rw[deleteEdges_deleteEdges]
-        have hs1 : s1.encard < k+1 := by
-          calc s1.encard ≤ ({e} : Set (Sym2 V)).encard + s.encard := by apply
-            Set.encard_union_le
-          _ <  k + 1 := by
-            rw[add_comm]
-            simp
-            exact lt_tsub_iff_right.mp hs
-        apply h hs1
-      · intro h s hs
-        by_cases hemp: s = ∅
-        · specialize h s(u,v)
-          have hsltk: s.encard < k := by
-            rw[hemp]
-            rw[Set.encard_empty]
-            exact Nat.cast_pos'.mpr hkpos
-          specialize h hsltk
-          rw[hemp, deleteEdges_empty]
-          rw[hemp, deleteEdges_empty] at h
-          have hlt: (G.deleteEdges {s(u, v)}) ≤ G := by
-            apply deleteEdges_le
-          apply Reachable.mono hlt
-          apply h
-
-        · have hnonEmp : s.Nonempty := by
-            apply Set.nonempty_iff_empty_ne.mpr
-            symm
-            apply hemp
-          obtain ⟨ e, he⟩ := hnonEmp
-          let s2 : Set (Sym2 V) := s \ {e}
-          have hs2: s = {e} ∪ s2 := by
-            refine Eq.symm (Set.union_diff_cancel ?_)
-            simp
-            assumption
-          rw[hs2, ← deleteEdges_deleteEdges]
-          apply h
-          · have h3: s.encard = s2.encard  + 1
-              := by exact Eq.symm (Set.encard_diff_singleton_add_one he)
-            rw[h3] at hs
-            exact lt_of_add_lt_add_right hs
-
-
-lemma isEdgeConnected_succ (hkpos : k > 0) :
-    G.IsEdgeConnected (k + 1) ↔ ∀ e, (G.deleteEdges {e}).IsEdgeConnected k := by
-    constructor
-    · unfold IsEdgeConnected
-      intro h e u v
-      have h2 : G.IsEdgeReachable (k + 1) u v := by
-        apply h u v
-      rw[isEdgeReachable_succ hkpos] at h2
-      apply h2
-
-    · unfold IsEdgeConnected
-      intro h u v
-      rw[isEdgeReachable_succ hkpos]
-      intro e
-      apply h
 
 end SimpleGraph
