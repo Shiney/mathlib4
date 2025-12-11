@@ -165,62 +165,26 @@ theorem isAcyclic_of_path_unique (h : ∀ (v w : V) (p q : G.Path v w), p = q) :
 theorem isAcyclic_iff_path_unique : G.IsAcyclic ↔ ∀ ⦃v w : V⦄ (p q : G.Path v w), p = q :=
   ⟨IsAcyclic.path_unique, isAcyclic_of_path_unique⟩
 
-theorem IsAcyclic.not_twoConnected (h : G.IsAcyclic) (u : V) (v : V) (hunev : u ≠ v)
+theorem IsAcyclic.not_twoConnected (h : G.IsAcyclic) (hnonTriv : Nontrivial V)
     : ¬ G.IsEdgeConnected 2 := by
-  by_contra hconn
-  specialize hconn u v
-  by_cases h2 : G.Reachable u v
-  · obtain ⟨ p1: G.Walk u v, hp1⟩  := (Reachable.exists_isPath h2)
-    match p1 with
-    | nil => contradiction
-    | cons' _ w _ _ p =>
-      let s1 := ({s(u,w)} : Set (Sym2 V))
-      have hsletwo : s1.encard < 2 := by
-        unfold s1
-        simp
-      have hdeladj: ¬(G.deleteEdges s1).Adj u w :=by
-            unfold s1
-            unfold deleteEdges
-            unfold Adj
-            simp
-            intro h3 h4
-            rw [h4] at h3
-            apply G.loopless w h3
-      specialize hconn hsletwo
-      obtain ⟨ p2: (G.deleteEdges s1).Walk u v, hp2⟩  := (Reachable.exists_isPath hconn)
-      -- show paths are not equal then use isAcyclic_iff_path_unique
-      match hp2eq : p2 with
-      | nil => contradiction
-      | cons' _ w' vv huw' prst =>
-        have wne : w' ≠ w:= by
-          by_contra hweq
-          rw[← hweq] at hdeladj
-          contradiction
-        let p3 := p2.mapLe (deleteEdges_le s1)
-        have hv : v = vv:= by assumption
-        subst hv
-        have h:  p2 = cons huw' prst := by
-          cases hp2eq
-          simp
-        have hp3 : p3.IsPath := by
-          refine (mapLe_isPath (deleteEdges_le s1)).mpr ?_
-          unfold cons' at hp2
-          rw[h]
-          assumption
-
-
-
-
-
-
-        sorry
-
-  · have hempt: (∅ : Set (Sym2 V)).encard < 2 := by
+    simp[IsEdgeConnected, IsEdgeReachable]
+    obtain ⟨ u,v, hunev⟩  := exists_pair_ne V
+    by_cases h:∃ w , G.Adj u w
+    · obtain ⟨w, hadj⟩ := h
+      have h := isAcyclic_iff_forall_adj_isBridge.mp h hadj
+      have h:= isBridge_iff.mp h
+      use u, w, {s(u,w)}
+      constructor
+      · simp
+      · exact h.right
+    · use u, v, {}
       simp
-    specialize hconn  hempt
-    rw[deleteEdges_empty] at hconn
-    contradiction
-
+      simp at h
+      by_contra hh
+      obtain ⟨walk⟩ := hh
+      apply h walk.snd
+      apply walk.adj_snd
+      exact not_nil_of_ne hunev
 
 theorem isTree_iff_existsUnique_path :
     G.IsTree ↔ Nonempty V ∧ ∀ v w : V, ∃! p : G.Walk v w, p.IsPath := by
