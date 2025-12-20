@@ -165,6 +165,27 @@ theorem isAcyclic_of_path_unique (h : ∀ (v w : V) (p q : G.Path v w), p = q) :
 theorem isAcyclic_iff_path_unique : G.IsAcyclic ↔ ∀ ⦃v w : V⦄ (p q : G.Path v w), p = q :=
   ⟨IsAcyclic.path_unique, isAcyclic_of_path_unique⟩
 
+theorem IsAcyclic.not_twoConnected (h : G.IsAcyclic) (hnonTriv : Nontrivial V)
+    : ¬ G.IsEdgeConnected 2 := by
+    simp[IsEdgeConnected, IsEdgeReachable]
+    obtain ⟨ u,v, hunev⟩  := exists_pair_ne V
+    by_cases h:∃ w , G.Adj u w
+    · obtain ⟨w, hadj⟩ := h
+      have h := isAcyclic_iff_forall_adj_isBridge.mp h hadj
+      have h:= isBridge_iff.mp h
+      use u, w, {s(u,w)}
+      constructor
+      · simp
+      · exact h.right
+    · use u, v, {}
+      simp
+      simp at h
+      by_contra hh
+      obtain ⟨walk⟩ := hh
+      apply h walk.snd
+      apply walk.adj_snd
+      exact not_nil_of_ne hunev
+
 theorem isTree_iff_existsUnique_path :
     G.IsTree ↔ Nonempty V ∧ ∀ v w : V, ∃! p : G.Walk v w, p.IsPath := by
   classical
