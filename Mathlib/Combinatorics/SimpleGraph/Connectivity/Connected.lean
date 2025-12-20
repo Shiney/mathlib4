@@ -1004,4 +1004,7 @@ lemma Preconnected.induce_of_degree_eq_one (hG : G.Preconnected) {s : Set V}
   by_contra hws
   exact hp.not_mem_support_of_subsingleton_neighborSet (by grind) (by grind) (hs _ hws) hwp
 
+
+
+
 end SimpleGraph
